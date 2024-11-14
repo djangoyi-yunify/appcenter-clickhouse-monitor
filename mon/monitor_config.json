@@ -1,0 +1,93 @@
+{
+    "target_path": "/opt/app/bin/node/monitor.sh",
+    "cluster": {
+        "roles": [],
+        "cmd": "/usr/bin/bash /opt/app/bin/node/monitor.sh cluster",
+        "interval": 60,
+        "timeout": 20
+    },
+    "nodes": {
+        "roles": [],
+        "cmd": "/usr/bin/bash /opt/app/bin/node/monitor.sh node",
+        "interval": 30,
+        "timeout": 20
+    },
+    "items": {
+        "cluster_health": {
+            "level": 5,
+            "unit": "",
+            "zh": "集群健康状态",
+            "value_type": "int",
+            "statistics_type": "latest"
+        },
+        "session_error": {
+            "level": 5,
+            "unit": "%",
+            "zh": "session 错误码",
+            "value_type": "int",
+            "statistics_type": "latest"
+        }
+    },
+    "item_groups": {
+        "cluster": {
+            "items": [
+                "cluster_health"
+            ],
+            "alarms": []
+        },
+        "roles": [
+            {
+                "role": "es_master_node",
+                "items": [
+                    "indices_indexing_index_ops",
+                    "indices_search_query_ops",
+                    "jvm_mem_heap_used_percent",
+                    "fs_total_avail_percent",
+                    "os_cpu_load_average_1m",
+                    "os_cpu_load_average_5m",
+                    "os_cpu_load_average_15m"
+                ],
+                "alarms": []
+            },
+            {
+                "role": "es_node",
+                "items": [
+                    "indices_indexing_index_ops",
+                    "indices_search_query_ops",
+                    "jvm_mem_heap_used_percent",
+                    "fs_total_avail_percent",
+                    "os_cpu_load_average_1m",
+                    "os_cpu_load_average_5m",
+                    "os_cpu_load_average_15m"
+                ],
+                "alarms": []
+            },
+            {
+                "role": "es_node_2",
+                "items": [
+                    "indices_indexing_index_ops",
+                    "indices_search_query_ops",
+                    "jvm_mem_heap_used_percent",
+                    "fs_total_avail_percent",
+                    "os_cpu_load_average_1m",
+                    "os_cpu_load_average_5m",
+                    "os_cpu_load_average_15m"
+                ],
+                "alarms": []
+            },
+            {
+                "role": "es_node_3",
+                "items": [
+                    "indices_indexing_index_ops",
+                    "indices_search_query_ops",
+                    "jvm_mem_heap_used_percent",
+                    "fs_total_avail_percent",
+                    "os_cpu_load_average_1m",
+                    "os_cpu_load_average_5m",
+                    "os_cpu_load_average_15m"
+                ],
+                "alarms": []
+            }
+        ]
+    }
+}

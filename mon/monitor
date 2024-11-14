@@ -1,0 +1,125 @@
+#!/usr/bin/env bash
+set -eu
+set -o pipefail
+
+# exit code
+EXIT_CODE_OK=0
+
+# search path
+ERR_FILE=/data/clickhouse-server/log/test.err.log
+
+# hostname
+INSTANCE_ID=$(hostname)
+
+# robot url
+robot_url="https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=9df973d7-7e5e-45f3-861c-312b1acca45b"
+
+main() {
+    if [ $# -lt 1 ] || [ -z "$1" ]; then
+        echo "{}"
+        return $EXIT_CODE_OK
+    fi
+    if [ ! "$1" = "cluster" ] && [ ! "$1" = "node" ]; then
+        echo "{}"
+        return $EXIT_CODE_OK
+    fi
+    case "$1" in
+    "cluster")
+        getClusterMetrics
+        ;;
+    "node")
+        getNodeMetrics
+        ;;
+    *)
+        echo "{}"
+        ;;
+    esac
+}
+
+# $1: health string
+# green: 0, yellow: 1, red: 2
+convertHealth() {
+    case "$1" in
+    "green")
+        echo -n "0"
+        ;;
+    "yellow")
+        echo -n "1"
+        ;;
+    "red")
+        echo -n "2"
+        ;;
+    *)
+        ;;
+    esac
+}
+
+getClusterMetrics() {
+    echo '{"cluster_health": 0}'
+}
+
+getNodeMetrics() {
+    now_time=$(date '+%Y.%m.%d %H:%M')
+    now_time=${now_time%?}
+    # raw_info=$(grep "$now_time" $ERR_FILE | grep "\ Code:\ ")
+    raw_info=$(cat $ERR_FILE | grep "\ Code:\ " | grep -vE 'TABLE_IS_READ_ONLY|Code: 1000|Code: 235|Code: 410')
+    if [ -z "$raw_info" ]; then
+        echo '{"session_error": 0}'
+        return 0
+    fi
+
+    show_code=$(echo "$raw_info" | sed -n 's/.*Code: \([0-9]*\).*/\1/p' | sort -n | uniq | tail -n1)
+    show_msg=$(echo "$raw_info" | grep "Code: $show_code" | tail -n1)
+    if echo "$raw_info" | grep "Code: 999" >/dev/null 2>&1; then
+        show_code=999
+        show_msg=$(echo "$raw_info" | grep "Code: 999" | tail -n1)
+    fi
+    echo '{"session_error": '$show_code'}'
+
+    # send message - prepare
+    all_code=$(echo "$raw_info" | sed -n 's/.*Code: \([0-9]*\).*/\1/p' | sort -n | uniq | tr '\n', ',')
+    all_code=${all_code%?}
+    msg_cnt=$(echo "$raw_info" | wc -l)
+
+    content=$(cat<<MYCONTENT
+这是一个测试，请忽略
+$INSTANCE_ID 告警, Code: $all_code
+错误日志:
+$show_msg
+近10分钟内告警次数: $msg_cnt
+MYCONTENT
+    )
+    json_str=$(echo "$content" | sed ':a;N;$!ba;s/\n/\\n/g;s/\"/\\\"/g')
+
+    # post data - normal
+    postData1=$(cat<<MYPOSTDATA1
+{
+    "msgtype": "text",
+    "text": {
+        "content": "$json_str"
+    }
+}
+MYPOSTDATA1
+    )
+
+    # post data - mention all
+    postData2=$(cat<<MYPOSTDATA2
+{
+    "msgtype": "text",
+    "text": {
+        "content": "$json_str",
+        "mentioned_list": ["@all"]
+    }
+}
+MYPOSTDATA2
+    )
+
+    # send message - send
+    if [ "$show_code" = "999" ]; then
+        curl -s -XPOST -H 'Content-Type: application/json' $robot_url -d "$postData2" >/dev/null 2>&1
+    else
+        curl -s -XPOST -H 'Content-Type: application/json' $robot_url -d "$postData1" >/dev/null 2>&1
+    fi
+}
+
+main $@
