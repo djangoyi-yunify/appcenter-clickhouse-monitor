@@ -1,15 +1,15 @@
 {
-    "target_path": "/opt/app/bin/node/monitor.sh",
+    "target_path": "/opt/monitor",
     "cluster": {
         "roles": [],
-        "cmd": "/usr/bin/bash /opt/app/bin/node/monitor.sh cluster",
-        "interval": 60,
+        "cmd": "/usr/bin/bash /opt/monitor cluster",
+        "interval": 3600,
         "timeout": 20
     },
     "nodes": {
         "roles": [],
-        "cmd": "/usr/bin/bash /opt/app/bin/node/monitor.sh node",
-        "interval": 30,
+        "cmd": "/usr/bin/bash /opt/monitor node",
+        "interval": 300,
         "timeout": 20
     },
     "items": {
@@ -37,54 +37,9 @@
         },
         "roles": [
             {
-                "role": "es_master_node",
+                "role": "",
                 "items": [
-                    "indices_indexing_index_ops",
-                    "indices_search_query_ops",
-                    "jvm_mem_heap_used_percent",
-                    "fs_total_avail_percent",
-                    "os_cpu_load_average_1m",
-                    "os_cpu_load_average_5m",
-                    "os_cpu_load_average_15m"
-                ],
-                "alarms": []
-            },
-            {
-                "role": "es_node",
-                "items": [
-                    "indices_indexing_index_ops",
-                    "indices_search_query_ops",
-                    "jvm_mem_heap_used_percent",
-                    "fs_total_avail_percent",
-                    "os_cpu_load_average_1m",
-                    "os_cpu_load_average_5m",
-                    "os_cpu_load_average_15m"
-                ],
-                "alarms": []
-            },
-            {
-                "role": "es_node_2",
-                "items": [
-                    "indices_indexing_index_ops",
-                    "indices_search_query_ops",
-                    "jvm_mem_heap_used_percent",
-                    "fs_total_avail_percent",
-                    "os_cpu_load_average_1m",
-                    "os_cpu_load_average_5m",
-                    "os_cpu_load_average_15m"
-                ],
-                "alarms": []
-            },
-            {
-                "role": "es_node_3",
-                "items": [
-                    "indices_indexing_index_ops",
-                    "indices_search_query_ops",
-                    "jvm_mem_heap_used_percent",
-                    "fs_total_avail_percent",
-                    "os_cpu_load_average_1m",
-                    "os_cpu_load_average_5m",
-                    "os_cpu_load_average_15m"
+                    "session_error"
                 ],
                 "alarms": []
             }

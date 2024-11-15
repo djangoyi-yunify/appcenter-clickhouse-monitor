@@ -6,7 +6,7 @@ set -o pipefail
 EXIT_CODE_OK=0
 
 # search path
-ERR_FILE=/data/clickhouse-server/log/test.err.log
+ERR_FILE=/data/clickhouse-server/log/clickhouse-server.err.log
 
 # hostname
 INSTANCE_ID=$(hostname)
@@ -36,24 +36,6 @@ main() {
     esac
 }
 
-# $1: health string
-# green: 0, yellow: 1, red: 2
-convertHealth() {
-    case "$1" in
-    "green")
-        echo -n "0"
-        ;;
-    "yellow")
-        echo -n "1"
-        ;;
-    "red")
-        echo -n "2"
-        ;;
-    *)
-        ;;
-    esac
-}
-
 getClusterMetrics() {
     echo '{"cluster_health": 0}'
 }
@@ -61,8 +43,7 @@ getClusterMetrics() {
 getNodeMetrics() {
     now_time=$(date '+%Y.%m.%d %H:%M')
     now_time=${now_time%?}
-    # raw_info=$(grep "$now_time" $ERR_FILE | grep "\ Code:\ ")
-    raw_info=$(cat $ERR_FILE | grep "\ Code:\ " | grep -vE 'TABLE_IS_READ_ONLY|Code: 1000|Code: 235|Code: 410')
+    raw_info=$(cat $ERR_FILE | sed -n "/$now_time/p" | sed -n '/\ Code:\ /p' | sed '/TABLE_IS_READ_ONLY/d; /Code: 1000/d; /Code: 235/d; /Code: 410/d')
     if [ -z "$raw_info" ]; then
         echo '{"session_error": 0}'
         return 0
@@ -82,11 +63,9 @@ getNodeMetrics() {
     msg_cnt=$(echo "$raw_info" | wc -l)
 
     content=$(cat<<MYCONTENT
-这是一个测试，请忽略
-$INSTANCE_ID 告警, Code: $all_code
-错误日志:
+Instance: $INSTANCE_ID, Code: $all_code
 $show_msg
-近10分钟内告警次数: $msg_cnt
+Number of errors in last 10m: $msg_cnt
 MYCONTENT
     )
     json_str=$(echo "$content" | sed ':a;N;$!ba;s/\n/\\n/g;s/\"/\\\"/g')
@@ -116,9 +95,9 @@ MYPOSTDATA2
 
     # send message - send
     if [ "$show_code" = "999" ]; then
-        curl -s -XPOST -H 'Content-Type: application/json' $robot_url -d "$postData2" >/dev/null 2>&1
+        curl -s -XPOST -H 'Content-Type: application/json' $robot_url -d "$postData2" >/dev/null 2>&1 | :
     else
-        curl -s -XPOST -H 'Content-Type: application/json' $robot_url -d "$postData1" >/dev/null 2>&1
+        curl -s -XPOST -H 'Content-Type: application/json' $robot_url -d "$postData1" >/dev/null 2>&1 | :
     fi
 }
 
