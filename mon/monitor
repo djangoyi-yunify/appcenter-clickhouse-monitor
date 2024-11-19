@@ -11,6 +11,12 @@ ERR_FILE=/data/clickhouse-server/log/clickhouse-server.err.log
 # hostname
 INSTANCE_ID=$(hostname)
 
+# userid
+USER_ID={{cluster.user_id}}
+
+# check id list
+CHECK_USER_ID_LIST="usr-vLjpKnUC,"
+
 # robot url
 robot_url="https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=9df973d7-7e5e-45f3-861c-312b1acca45b"
 
@@ -58,6 +64,10 @@ getNodeMetrics() {
     echo '{"session_error": '$show_code'}'
 
     # send message - prepare
+    if ! echo "$CHECK_USER_ID_LIST" | grep "$USER_ID"; then
+        return 0
+    fi
+
     all_code=$(echo "$raw_info" | sed -n 's/.*Code: \([0-9]*\).*/\1/p' | sort -n | uniq | tr '\n', ',')
     all_code=${all_code%?}
     msg_cnt=$(echo "$raw_info" | wc -l)

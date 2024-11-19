@@ -22,7 +22,7 @@
         },
         "session_error": {
             "level": 5,
-            "unit": "%",
+            "unit": "",
             "zh": "session 错误码",
             "value_type": "int",
             "statistics_type": "latest"
